@@ -477,7 +477,8 @@ class DatabaseManager {
                 veiculos: await this.getAll('veiculos'),
                 pecas: await this.getAll('pecas'),
                 servicos: await this.getAll('servicos'),
-                ordens: await this.getAll('ordens')
+                ordens: await this.getAll('ordens'),
+                fornecedores: await this.getAll('fornecedores')
             }
         };
         return data;
