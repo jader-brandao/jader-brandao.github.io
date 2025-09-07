@@ -658,6 +658,59 @@ async function loadOrdemData(ordem) {
     updateOrdemTotal();
 }
 
+function openFornecedorModal(fornecedor = null) {
+    const isEdit = fornecedor !== null;
+    const title = isEdit ? 'Editar Fornecedor' : 'Novo Fornecedor';
+
+    const content = `
+        <form id="fornecedor-form" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
+                    <input type="text" id="fornecedor-nome" value="${isEdit ? fornecedor.nome : ''}" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">CNPJ *</label>
+                    <input type="text" id="fornecedor-cnpj" value="${isEdit ? fornecedor.cnpj : ''}" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent" required placeholder="00.000.000/0000-00">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 pt-4">
+                <button type="button" onclick="this.closest('.modal-overlay').remove()" 
+                    class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                    ${isEdit ? 'Atualizar' : 'Salvar'}
+                </button>
+            </div>
+        </form>
+    `;
+
+    const modal = new Modal(title, content);
+    modal.show();
+
+    // Máscara simples para CNPJ
+    const cnpjInput = document.getElementById('fornecedor-cnpj');
+    cnpjInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value
+            .replace(/\D/g, '')
+            .replace(/^(\d{2})(\d)/, '$1.$2')
+            .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+            .replace(/\.(\d{3})(\d)/, '.$1/$2')
+            .replace(/(\d{4})(\d)/, '$1-$2')
+            .replace(/(-\d{2})\d+?$/, '$1');
+    });
+
+    // Handle form submission
+    document.getElementById('fornecedor-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveFornecedor(isEdit ? fornecedor.id : null);
+        modal.close();
+    });
+}
+
 function openImportModal() {
     const content = `
         <form id="import-form" class="space-y-4">

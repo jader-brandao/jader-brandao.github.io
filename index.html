@@ -52,6 +52,11 @@
                             Ordens de Serviço
                         </a>
                     </li>
+                    <li>
+                        <a href="#" onclick="showSection('fornecedores'); loadFornecedores();" class="nav-link flex items-center px-4 py-2 text-white hover:bg-yellow-700 rounded-lg transition-colors duration-200">
+                            <i data-lucide="truck" class="w-5 h-5 mr-3"></i>
+                            Fornecedores
+                        </a>
                 </ul>
             </nav>
         </div>
@@ -415,6 +420,57 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Seção de fornecedores -->
+            <div id="fornecedores-section" class="section hidden">
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-900">Gerenciar Fornecedores</h3>
+                    <button onclick="openFornecedorModal()" class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors duration-200">
+                        <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>
+                        Novo Fornecedor
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <input type="text" id="search-fornecedores" placeholder="Buscar fornecedores..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                    </div>
+                    <div class="table-responsive">
+                        <table class="min-w-full table-auto">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CNPJ</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fornecedores-table" class="bg-white divide-y divide-gray-200">
+                                <!-- Fornecedores serão inseridos aqui dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de fornecedor -->
+        <div id="fornecedor-modal" class="modal hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-auto">
+                <h4 class="text-lg font-semibold mb-4">Fornecedor</h4>
+                <div class="mb-4">
+                    <label for="fornecedor-nome" class="block text-sm font-medium text-gray-700 mb-1">Nome do Fornecedor</label>
+                    <input id="fornecedor-nome" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent" placeholder="Nome do Fornecedor" />
+                </div>
+                <div class="mb-4">
+                    <label for="fornecedor-cnpj" class="block text-sm font-medium text-gray-700 mb-1">CNPJ</label>
+                    <input id="fornecedor-cnpj" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent" placeholder="CNPJ (00.000.000/0000-00)" />
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button onclick="saveFornecedorWrapper()" class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors duration-200">Salvar</button>
+                    <button onclick="closeFornecedorModal()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors duration-200">Cancelar</button>
+                </div>
+            </div>
+        </div>
         </main>
     </div>
 

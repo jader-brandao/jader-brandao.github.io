@@ -2,7 +2,7 @@
 class DatabaseManager {
     constructor() {
         this.dbName = 'OficinaDB';
-        this.dbVersion = 1;
+        this.dbVersion = 2;
         this.db = null;
     }
 
@@ -81,6 +81,13 @@ class DatabaseManager {
                     ordensStore.createIndex('status', 'status', { unique: false });
                     ordensStore.createIndex('dataAbertura', 'dataAbertura', { unique: false });
                     console.log('Store ordens criada');
+                }
+
+                if (!db.objectStoreNames.contains('fornecedores')) {
+                    const fornecedoresStore = db.createObjectStore('fornecedores', { keyPath: 'id', autoIncrement: true });
+                    fornecedoresStore.createIndex('nome', 'nome', { unique: false });
+                    fornecedoresStore.createIndex('cnpj', 'cnpj', { unique: true });
+                    console.log('Store fornecedores criada');
                 }
             };
         });
@@ -433,6 +440,32 @@ class DatabaseManager {
         const pecas = await this.getAllPecas();
         return pecas.filter(peca => peca.estoque <= (peca.estoqueMinimo || 0));
     }
+
+    // Fornecedores
+    async addFornecedor(fornecedor) {
+        fornecedor.dataCriacao = new Date().toISOString();
+        return await this.add('fornecedores', fornecedor);
+    }
+
+    async updateFornecedor(fornecedor) {
+        fornecedor.dataModificacao = new Date().toISOString();
+        return await this.update('fornecedores', fornecedor);
+    }
+
+    async deleteFornecedor(id) {
+        return await this.delete('fornecedores', id);
+    }
+
+    async getFornecedorById(id) {
+        return await this.get('fornecedores', id);
+    }
+
+    async getAllFornecedores() {
+        return await this.getAll('fornecedores');
+    }
+
+
+
 
     // Métodos de backup e restauração
     async exportAllData() {

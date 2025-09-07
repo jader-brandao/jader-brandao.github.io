@@ -197,6 +197,12 @@ function setupSearchFilters() {
     if (filterStatus) {
         filterStatus.addEventListener('change', applyOrdensFilters);
     }
+
+    // Busca de fornecedores
+    const searchFornecedores = document.getElementById('search-fornecedores');
+    if (searchFornecedores) {
+        searchFornecedores.addEventListener('input', debounce(filterFornecedores, 300));
+    }
 }
 
 function debounce(func, wait) {
@@ -549,6 +555,31 @@ async function loadOrdens() {
     }
 }
 
+// Funções de carregamento de fornecedores
+async function loadFornecedores() {
+    const fornecedores = await db.getAllFornecedores();
+    const tbody = document.getElementById('fornecedores-table');
+    if (fornecedores.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">Nenhum fornecedor cadastrado</td></tr>';
+        return;
+    }
+    tbody.innerHTML = fornecedores.map(fornecedor => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4" data-label="Nome">${fornecedor.nome}</td>
+            <td class="px-6 py-4" data-label="CNPJ">${fornecedor.cnpj}</td>
+            <td class="px-6 py-4 text-sm font-medium" data-label="Ações">
+                <button onclick="editFornecedor(${fornecedor.id})" class="text-yellow-600 hover:text-yellow-900 mr-3">
+                    <i data-lucide="edit" class="w-4 h-4"></i>
+                </button>
+                <button onclick="deleteFornecedor(${fornecedor.id})" class="text-red-600 hover:text-red-900">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    lucide.createIcons();
+}
+
 // Funções de salvamento
 async function saveCliente(id = null) {
     try {        const cliente = {
@@ -780,6 +811,82 @@ async function saveOrdem(id = null) {
     }
 }
 
+// Função para salvar fornecedor
+async function saveFornecedor(id = null) {
+    try {
+        // Busque o modal dinâmico
+        const modalOverlay = document.querySelector('.modal-overlay');
+        const nomeInput = modalOverlay ? modalOverlay.querySelector('#fornecedor-nome') : document.getElementById('fornecedor-nome');
+        const cnpjInput = modalOverlay ? modalOverlay.querySelector('#fornecedor-cnpj') : document.getElementById('fornecedor-cnpj');
+
+        const nome = nomeInput ? nomeInput.value.trim() : '';
+        const cnpj = cnpjInput ? cnpjInput.value.trim() : '';
+
+        // Validações
+        if (!nome) {
+            Utils.showToast('Informe o nome do fornecedor', 'error');
+            return;
+        }
+        if (!validarCNPJ(cnpj)) {
+            Utils.showToast('CNPJ inválido', 'error');
+            return;
+        }
+
+        const fornecedor = { nome, cnpj };
+
+        if (id) {
+            fornecedor.id = id;
+            await db.updateFornecedor(fornecedor);
+            Utils.showToast('Fornecedor atualizado com sucesso', 'success');
+        } else {
+            await db.addFornecedor(fornecedor);
+            Utils.showToast('Fornecedor adicionado com sucesso', 'success');
+        }
+
+        await loadFornecedores();
+        await loadDashboard();
+
+    } catch (error) {
+        console.error('Erro ao salvar fornecedor:', error);
+        Utils.showToast('Erro ao salvar fornecedor', 'error');
+    }
+}
+
+function validarCNPJ(cnpj) {
+    cnpj = cnpj.replace(/[^\d]+/g, '');
+    if (cnpj.length !== 14) return false;
+    // Elimina CNPJs inválidos conhecidos
+    if (/^(\d)\1+$/.test(cnpj)) return false;
+    let tamanho = cnpj.length - 2;
+    let numeros = cnpj.substring(0, tamanho);
+    let digitos = cnpj.substring(tamanho);
+    let soma = 0;
+    let pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) {
+        soma += numeros.charAt(tamanho - i) * pos--;
+        if (pos < 2) pos = 9;
+    }
+    let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+    if (resultado != digitos.charAt(0)) return false;
+    tamanho = tamanho + 1;
+    numeros = cnpj.substring(0, tamanho);
+    soma = 0;
+    pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) {
+        soma += numeros.charAt(tamanho - i) * pos--;
+        if (pos < 2) pos = 9;
+    }
+    resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+    if (resultado != digitos.charAt(1)) return false;
+    return true;
+}
+
+
+function saveFornecedorWrapper() {
+    saveFornecedor(window.currentFornecedorId);
+    closeFornecedorModal();
+}
+
 // Funções de edição
 async function editCliente(id) {
     const cliente = await db.getClienteById(id);
@@ -815,6 +922,15 @@ async function editOrdem(id) {
         openOrdemModal(ordem);
     }
 }
+
+// Funções de edição e exclusão
+async function editFornecedor(id) {
+    const fornecedor = await db.getFornecedorById(id);
+    if (fornecedor) {
+        openFornecedorModal(fornecedor);
+    }
+}
+
 
 // Funções de exclusão
 async function deleteCliente(id) {
@@ -893,6 +1009,18 @@ async function deleteOrdem(id) {
     }
 }
 
+async function deleteFornecedor(id) {
+    if (confirm('Tem certeza que deseja excluir este fornecedor?')) {
+        try {
+            await db.delete('fornecedores', id);
+            Utils.showToast('Fornecedor excluído com sucesso', 'success');
+            await loadFornecedores();
+        } catch (error) {
+            Utils.showToast('Erro ao excluir fornecedor', 'error');
+        }
+    }
+}
+
 // Funções de filtro/busca
 function filterClientes() {
     const searchTerm = document.getElementById('search-clientes').value.toLowerCase();
@@ -928,6 +1056,15 @@ function filterServicos() {
     const searchTerm = document.getElementById('search-servicos').value.toLowerCase();
     const rows = document.querySelectorAll('#servicos-table tr');
     
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+}
+
+ function filterFornecedores() {
+    const searchTerm = document.getElementById('search-fornecedores').value.toLowerCase();
+    const rows = document.querySelectorAll('#fornecedores-table tr');
     rows.forEach(row => {
         const text = row.textContent.toLowerCase();
         row.style.display = text.includes(searchTerm) ? '' : 'none';
@@ -973,7 +1110,7 @@ function filterOrdens() {
             visibleCount++;
         }
     });
-    
+
     // Mostrar mensagem se nenhuma ordem for encontrada
     const tbody = document.getElementById('ordens-table');
     if (visibleCount === 0 && tbody && (searchTerm !== '' || statusFilter !== '')) {
